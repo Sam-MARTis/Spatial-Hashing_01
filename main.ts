@@ -6,7 +6,7 @@ const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
 //CONSTANTS
 
-    //Screen and bacground 
+    //Screen and background 
 const ARENA_WIDTH = 100;
 const ARENA_HEIGHT = 100;
 const SCREEN_HEIGHT_OCCUPANCY = 0.8;
@@ -16,10 +16,11 @@ const SCREEN_WIDTH = canvas.width;
 const SCREEN_HEIGHT = canvas.height;
 
     //Entities
-const PARTICLE_COUNT = 100;
+const PARTICLE_COUNT = 4000;
 const PARTICLE_RADIUS = 5;
 const PARTICLE_COLOR = "red";
 const PARTICLE_VELOCITY = 100;
+const EPSILON = 0.0001;
 
 
 // Early calculation
@@ -88,8 +89,27 @@ class Particle{
         this.ctx.fill();
     }
 
-    handleCollision = (other: Particle) => {
-        //TODO
+    handleCollision = (other: Particle):void => {
+        if(other === this) return;
+        const dx = other.x - this.x;
+        const dy = other.y - this.y;
+        const distance_squared = dx*dx + dy*dy;
+        if(distance_squared<( 4*this.radius*this.radius + 0)){
+            const distance = Math.sqrt(distance_squared);
+            const nx = dx/distance;
+            const ny = dy/distance;
+            const average_vx = (this.vx + other.vx)/2;
+            const average_vy = (this.vy + other.vy)/2;
+            const dot_product = nx*(this.vx - other.vx) + ny*(this.vy - other.vy);
+            this.vx -= 1*dot_product*nx;
+            this.vy -= 1*dot_product*ny;
+            other.vx += 1*dot_product*nx;
+            other.vy += 1*dot_product*ny;
+            this.x -= nx*(2*this.radius-distance)/2;
+            this.y -= ny*(2*this.radius-distance)/2;
+            other.x += nx*(2*this.radius-distance)/2;
+            other.y += ny*(2*this.radius-distance)/2;
+        }
     }
 
 }
@@ -97,7 +117,23 @@ class Particle{
 
 
 
+// Particle handling functions
+const moveParticles = (particles: Particle[], dt: number): void => {
+    for (let i = 0; i < particles.length; i++){
+        particles[i].move(dt);
+    }
+    for (let i = 0; i < particles.length; i++){
+        for (let j = i+1; j < particles.length; j++){
+            particles[i].handleCollision(particles[j]);
+        }
+    }
+}
 
+const drawParticles = (particles: Particle[]): void => {
+    for (let i = 0; i < particles.length; i++){
+        particles[i].draw();
+    }
+}
 
 
 
@@ -119,10 +155,8 @@ const main = (particles: Particle[]):void => {
     const dt = 1/60;
     console.log("Main loop");
     ctx.clearRect(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
-    for (let i = 0; i < particles.length; i++){
-        particles[i].move(dt);
-        particles[i].draw();
-    }
+    moveParticles(particles,dt);
+    drawParticles(particles);
     window.requestAnimationFrame(() => main(particles));
 }
 
