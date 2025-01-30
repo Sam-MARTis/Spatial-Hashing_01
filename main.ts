@@ -26,6 +26,8 @@ const ARENA_WIDTH_PIXELS = SCREEN_WIDTH*SCREEN_WIDTH_OCCUPANCY;
 const ARENA_HEIGHT_PIXELS = SCREEN_HEIGHT*SCREEN_HEIGHT_OCCUPANCY;
 const ARENA_DX = ARENA_WIDTH_PIXELS/ARENA_WIDTH;
 const ARENA_DY = ARENA_HEIGHT_PIXELS/ARENA_HEIGHT;
+const ARENA_X_OFFSET = (SCREEN_WIDTH - ARENA_WIDTH_PIXELS)/2;
+const ARENA_Y_OFFSET = (SCREEN_HEIGHT - ARENA_HEIGHT_PIXELS)/2;
 
 // Classes
 
@@ -51,21 +53,21 @@ class Particle{
         this.ctx = ctx;
     }
     handleBoundary = () => {
-        if (this.x < this.radius){
+        if (this.x < this.radius+ARENA_X_OFFSET){
             this.vx = -this.vx;
-            this.x = this.radius;
+            this.x = this.radius+ARENA_X_OFFSET;
         }
-        if (this.x > ARENA_WIDTH_PIXELS - this.radius){
+        if (this.x > ARENA_WIDTH_PIXELS-this.radius+ARENA_X_OFFSET){
             this.vx = -this.vx;
-            this.x = ARENA_WIDTH_PIXELS - this.radius;
+            this.x = ARENA_WIDTH_PIXELS-this.radius+ARENA_X_OFFSET;
         }
-        if (this.y < this.radius){
+        if (this.y < this.radius+ARENA_Y_OFFSET){
             this.vy = -this.vy;
-            this.y = this.radius;
+            this.y = this.radius+ARENA_Y_OFFSET;
         }
-        if (this.y > ARENA_HEIGHT_PIXELS - this.radius){
+        if (this.y > ARENA_HEIGHT_PIXELS-this.radius+ARENA_Y_OFFSET){
             this.vy = -this.vy;
-            this.y = ARENA_HEIGHT_PIXELS - this.radius;
+            this.y = ARENA_HEIGHT_PIXELS-this.radius+ARENA_Y_OFFSET;
         }
     }
     move = (dt: number) => {
@@ -96,3 +98,31 @@ class Particle{
 
 
 
+
+
+
+// Core engine
+const initiate = ():void => {
+    const particles = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++){
+        const x = (SCREEN_WIDTH - ARENA_WIDTH_PIXELS)/2 + Math.random()*ARENA_WIDTH_PIXELS;
+        const y = SCREEN_HEIGHT*(1-SCREEN_HEIGHT_OCCUPANCY)/2 + Math.random()*ARENA_HEIGHT_PIXELS;
+        const vx = Math.random()*10 - 5;
+        const vy = Math.random()*10 - 5;
+        particles.push(new Particle(x,y,vx,vy,PARTICLE_RADIUS,PARTICLE_COLOR,ctx));
+    }
+    main(particles);
+    
+}
+const main = (particles: Particle[]):void => {
+    const dt = 1/60;
+    console.log("Main loop");
+    for (let i = 0; i < particles.length; i++){
+        particles[i].move(dt);
+        particles[i].draw();
+    }
+    window.requestAnimationFrame(() => main(particles));
+}
+
+
+initiate();
