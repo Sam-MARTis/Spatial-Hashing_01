@@ -17,8 +17,9 @@ const SCREEN_HEIGHT = canvas.height;
 
     //Entities
 const PARTICLE_COUNT = 100;
-const PARTICLE_RADIUS = 1;
+const PARTICLE_RADIUS = 5;
 const PARTICLE_COLOR = "red";
+const PARTICLE_VELOCITY = 100;
 
 
 // Early calculation
@@ -107,8 +108,8 @@ const initiate = ():void => {
     for (let i = 0; i < PARTICLE_COUNT; i++){
         const x = (SCREEN_WIDTH - ARENA_WIDTH_PIXELS)/2 + Math.random()*ARENA_WIDTH_PIXELS;
         const y = SCREEN_HEIGHT*(1-SCREEN_HEIGHT_OCCUPANCY)/2 + Math.random()*ARENA_HEIGHT_PIXELS;
-        const vx = Math.random()*10 - 5;
-        const vy = Math.random()*10 - 5;
+        const vx = Math.random()*PARTICLE_VELOCITY - PARTICLE_VELOCITY/2;
+        const vy = Math.random()*PARTICLE_VELOCITY - PARTICLE_VELOCITY/2;
         particles.push(new Particle(x,y,vx,vy,PARTICLE_RADIUS,PARTICLE_COLOR,ctx));
     }
     main(particles);
@@ -117,6 +118,7 @@ const initiate = ():void => {
 const main = (particles: Particle[]):void => {
     const dt = 1/60;
     console.log("Main loop");
+    ctx.clearRect(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
     for (let i = 0; i < particles.length; i++){
         particles[i].move(dt);
         particles[i].draw();
