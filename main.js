@@ -6,8 +6,6 @@ canvas.height = window.innerHeight * devicePixelRatio;
 const ctx = canvas.getContext("2d");
 //CONSTANTS
 //Screen and background
-const ARENA_WIDTH = 70;
-const ARENA_HEIGHT = 70;
 const SCREEN_HEIGHT_OCCUPANCY = 0.7;
 const SCREEN_WIDTH_OCCUPANCY = 0.8;
 const BACKGROUND_COLOR = "black";
@@ -26,12 +24,16 @@ const PARTICLE_VELOCITY = 150;
 // Early calculation
 const ARENA_WIDTH_PIXELS = SCREEN_WIDTH * SCREEN_WIDTH_OCCUPANCY;
 const ARENA_HEIGHT_PIXELS = SCREEN_HEIGHT * SCREEN_HEIGHT_OCCUPANCY;
-const ARENA_DX = ARENA_WIDTH_PIXELS / ARENA_WIDTH;
-const ARENA_DY = ARENA_HEIGHT_PIXELS / ARENA_HEIGHT;
 const ARENA_X_OFFSET = (SCREEN_WIDTH - ARENA_WIDTH_PIXELS) / 2;
 const ARENA_Y_OFFSET = (SCREEN_HEIGHT - ARENA_HEIGHT_PIXELS) / 2;
 let time = performance.now();
 let timeTaken = 0;
+// Spatial Grid
+const RADIUS_TO_SIDE_RATIO = 1.5;
+const GRID_SIZE_DL = PARTICLE_RADIUS * RADIUS_TO_SIDE_RATIO;
+const GRID_X = Math.ceil(ARENA_WIDTH_PIXELS / GRID_SIZE_DL);
+const GRID_Y = Math.ceil(ARENA_HEIGHT_PIXELS / GRID_SIZE_DL);
+let GRID = new Array(GRID_X).fill(null).map(() => new Array(GRID_Y));
 // Classes
 class Particle {
     constructor(x, y, vx, vy, radius, color, ctx) {
@@ -91,6 +93,11 @@ class Particle {
                 other.y += (ny * (2 * this.radius - distance)) / 2;
             }
         };
+        this.getGridCoordinates = () => {
+            const x = Math.floor((this.x - ARENA_X_OFFSET) / GRID_SIZE_DL);
+            const y = Math.floor((this.y - ARENA_Y_OFFSET) / GRID_SIZE_DL);
+            return { x, y };
+        };
         this.x = x;
         this.y = y;
         this.vx = vx;
@@ -100,6 +107,7 @@ class Particle {
         this.ax = 0;
         this.ay = 0;
         this.ctx = ctx;
+        this.gridCoordinates = this.getGridCoordinates();
     }
 }
 // Particle handling functions
