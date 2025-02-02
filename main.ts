@@ -23,7 +23,7 @@ const EPSILON = 0.0001;
 
 //Entities
 const PARTICLE_COUNT = 12500;
-const PARTICLE_RADIUS = 1.0;
+const PARTICLE_RADIUS = Math.sqrt(SCREEN_HEIGHT *SCREEN_WIDTH) / 1000;
 const PARTICLE_COLOR = "red";
 const PARTICLE_VELOCITY = 15;
 
@@ -39,7 +39,7 @@ let time = performance.now();
 let timeTaken = 0;
 
 // Spatial Grid
-const RADIUS_TO_SIDE_RATIO = 5.5;
+const RADIUS_TO_SIDE_RATIO = 2;
 const GRID_SIZE_DL = PARTICLE_RADIUS * RADIUS_TO_SIDE_RATIO;
 const GRID_X = Math.ceil(ARENA_WIDTH_PIXELS / GRID_SIZE_DL);
 const GRID_Y = Math.ceil(ARENA_HEIGHT_PIXELS / GRID_SIZE_DL);
@@ -248,4 +248,3 @@ const FrameRateUpdater = (): void => {
 
 
 initiate();
-R
