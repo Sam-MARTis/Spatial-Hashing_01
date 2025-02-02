@@ -8,24 +8,24 @@ const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
 //Screen and background
 
-const SCREEN_HEIGHT_OCCUPANCY = 0.7;
+const SCREEN_HEIGHT_OCCUPANCY = 0.6;
 const SCREEN_WIDTH_OCCUPANCY = 0.8;
 const BACKGROUND_COLOR = "black";
 const SCREEN_WIDTH = canvas.width;
 const SCREEN_HEIGHT = canvas.height;
 
-const CALC_TO_DISPLAY_RATIO = 5;
+const CALC_TO_DISPLAY_RATIO = 3;
 
 //Universe
-const GRAVITY = 100;
-const dt = 1 / 1000;
+const GRAVITY = 1000;
+const dt = 1 / 2000;
 const EPSILON = 0.0001;
 
 //Entities
-const PARTICLE_COUNT = 2500;
-const PARTICLE_RADIUS = 5.6;
+const PARTICLE_COUNT = 12500;
+const PARTICLE_RADIUS = 1.0;
 const PARTICLE_COLOR = "red";
-const PARTICLE_VELOCITY = 150;
+const PARTICLE_VELOCITY = 15;
 
 
 
@@ -39,13 +39,15 @@ let time = performance.now();
 let timeTaken = 0;
 
 // Spatial Grid
-const RADIUS_TO_SIDE_RATIO = 1.5;
+const RADIUS_TO_SIDE_RATIO = 5.5;
 const GRID_SIZE_DL = PARTICLE_RADIUS * RADIUS_TO_SIDE_RATIO;
 const GRID_X = Math.ceil(ARENA_WIDTH_PIXELS / GRID_SIZE_DL);
 const GRID_Y = Math.ceil(ARENA_HEIGHT_PIXELS / GRID_SIZE_DL);
 
-let GRID = new Array(GRID_X).fill(null).map(() => new Array(GRID_Y));
-
+let GRID:Particle[][][] = new Array(GRID_Y).fill(null).map(() => new Array(GRID_X).fill(null).map(() => []));
+const initializeGrid = () => {
+  GRID = new Array(GRID_Y).fill(null).map(() => new Array(GRID_X).fill(null).map(() => []));
+}
 
 
 
@@ -115,6 +117,7 @@ class Particle {
     this.x += (this.vx * dt) / 2;
     this.y += (this.vy * dt) / 2;
     this.handleBoundary();
+    this.gridCoordinates = this.getGridCoordinates();
   };
 
   draw = () => {
@@ -149,6 +152,10 @@ class Particle {
   getGridCoordinates = () => {
     const x = Math.floor((this.x - ARENA_X_OFFSET) / GRID_SIZE_DL);
     const y = Math.floor((this.y - ARENA_Y_OFFSET) / GRID_SIZE_DL);
+    if(x>=GRID_X || y>=GRID_Y || x<0 || y<0){
+      console.warn("Out of bounds in grid: " + x,y);
+      return {x:0,y:0};
+    }
     return { x, y };
   }
 }
@@ -159,16 +166,40 @@ const addGravity = (particles: Particle[]): void => {
     particles[i].ay = GRAVITY;
   }
 };
+const addParticesToGrid = (particles: Particle[]): void => {
+  for (let i = 0; i < particles.length; i++) {
+    const { x, y } = particles[i].gridCoordinates;
+    if ((GRID[y][x] === undefined) || (GRID[y][x] === null)) {
+      GRID[y][x] = [];
+      console.log("Grid cell undefined/null initialized")
+    }
+    GRID[y][x].push(particles[i]);
+  }
+}
+const handleParicleCollisions = (particles: Particle[]): void => {
+  for (let i = 0; i < particles.length; i++) {
+    const { x, y } = particles[i].gridCoordinates;
+    for (let j = -1; j < 2; j++) {
+      for (let k = -1; k < 2; k++) {
+        if (x + j >= 0 && x + j < GRID_X && y + k >= 0 && y + k < GRID_Y) {
+          for (let l = 0; l < GRID[y + k][x + j].length; l++) {
+            particles[i].handleCollision(GRID[y + k][x + j][l]);
+          }
+        }
+      }
+    }
+  }
+}
 const moveParticles = (particles: Particle[], dt: number): void => {
   addGravity(particles);
   for (let i = 0; i < particles.length; i++) {
     particles[i].move(dt);
   }
-  for (let i = 0; i < particles.length; i++) {
-    for (let j = i + 1; j < particles.length; j++) {
-      particles[i].handleCollision(particles[j]);
-    }
-  }
+  initializeGrid();
+  addParticesToGrid(particles);
+  handleParicleCollisions(particles);
+
+
 };
 
 const drawParticles = (particles: Particle[]): void => {
@@ -217,3 +248,4 @@ const FrameRateUpdater = (): void => {
 
 
 initiate();
+R
